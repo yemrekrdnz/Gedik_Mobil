@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "699965936110",
+    "project_id": "gedikmobil",
+    "storage_bucket": "gedikmobil.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:699965936110:android:4e4a2b28377279bd54feff",
+        "android_client_info": {
+          "package_name": "com.android.application"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyACnI_bKrKWYXmvZKDgjx0R_8IeJGlvLck"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
