@@ -1,1 +1,1 @@
-# Gedfik_Mobil
+# Gedik_Mobil
