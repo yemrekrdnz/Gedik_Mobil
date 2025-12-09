@@ -22,6 +22,10 @@ dependencies:
   # Harita yönlendirme
   url_launcher: ^6.2.5
 
+  # HTML parsing (compatible with Firebase)
+  http: ^1.2.0
+  html: ^0.15.4
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

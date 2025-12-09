@@ -6,6 +6,9 @@ import 'package:gedik_mobil/features/map/pages/map_page.dart';
 // 🔥 Dijital Kimlik sayfasını import et
 import 'package:gedik_mobil/features/kimlik/pages/digital_id_page.dart';
 
+// 🔥 Akademik Bilgi sayfasını import et
+import 'package:gedik_mobil/features/hocaVeKuluep/pages/hoca_ve_kuluep.dart';
+
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
 
@@ -22,8 +25,11 @@ class _HomePageState extends State<HomePage> {
     Center(child: Text("Duyurular")),
     const MapPage(),
 
-    // 🔥 Dijital Kimlik Artık Burada
+    // 🔥 Dijital Kimlik
     const DigitalIDPage(),
+    
+    // 🔥 Akademik Bilgi (Kadro & Kulüpler)
+    const HocaVeKuluep(),
   ];
 
   // 🔥 ÇIKIŞ FONKSİYONU
@@ -60,6 +66,7 @@ class _HomePageState extends State<HomePage> {
         selectedItemColor: const Color.fromARGB(255, 136, 31, 96),
         unselectedItemColor: Colors.grey,
         onTap: (i) => setState(() => currentIndex = i),
+        type: BottomNavigationBarType.fixed, // 5 item için gerekli
         items: const [
           BottomNavigationBarItem(
             icon: Icon(Icons.restaurant_menu),
@@ -71,6 +78,7 @@ class _HomePageState extends State<HomePage> {
           ),
           BottomNavigationBarItem(icon: Icon(Icons.map), label: "Harita"),
           BottomNavigationBarItem(icon: Icon(Icons.badge), label: "Kimlik"),
+          BottomNavigationBarItem(icon: Icon(Icons.school), label: "Hoca Ve Kulüp"),
         ],
       ),
     );
