@@ -25,6 +25,7 @@ dependencies:
   # HTML parsing (compatible with Firebase)
   http: ^1.2.0
   html: ^0.15.4
+  xml: ^6.6.1
 
 dev_dependencies:
   flutter_test:
