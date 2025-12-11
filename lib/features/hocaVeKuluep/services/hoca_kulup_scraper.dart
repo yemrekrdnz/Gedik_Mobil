@@ -147,6 +147,18 @@ class HocaKulupScraper {
     }
   }
 
+  /// Fetch academic staff from a specific department URL
+  Future<List<HocaInfo>> fetchHocalarFromDepartment(
+    String departmentUrl,
+  ) async {
+    try {
+      final pageItems = await _fetchHocalarFromPage(departmentUrl);
+      return pageItems.isNotEmpty ? pageItems : _fallbackHocalar;
+    } catch (_) {
+      return _fallbackHocalar;
+    }
+  }
+
   Future<List<String>> _fetchAkademikKadroLinks() async {
     try {
       final response = await _get(_pageSitemapUrl);

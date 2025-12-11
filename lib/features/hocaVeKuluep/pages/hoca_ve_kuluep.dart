@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../models/academic_staff.dart';
 import '../models/club.dart';
+import '../models/department.dart';
 import '../services/hoca_kulup_scraper.dart';
 
 class HocaVeKuluep extends StatefulWidget {
@@ -32,6 +33,8 @@ class _HocaVeKuluepState extends State<HocaVeKuluep>
   int _currentMaxPages = 5;
   bool _hasMorePages = true;
 
+  Department _selectedDepartment = Departments.defaultDepartment;
+
   final TextEditingController _staffSearchController = TextEditingController();
   final TextEditingController _clubSearchController = TextEditingController();
 
@@ -61,13 +64,14 @@ class _HocaVeKuluepState extends State<HocaVeKuluep>
       _staffError = null;
       if (reset) {
         _currentMaxPages = 5;
-        _hasMorePages = true;
+        _hasMorePages = false; // Disable load more for single department
       }
     });
 
     try {
-      final hocalar = await _scraperService.fetchHocalar(
-        maxPages: _currentMaxPages,
+      // Fetch from selected department only
+      final hocalar = await _scraperService.fetchHocalarFromDepartment(
+        _selectedDepartment.url,
       );
       setState(() {
         _academicStaff = hocalar
@@ -101,49 +105,20 @@ class _HocaVeKuluepState extends State<HocaVeKuluep>
     }
   }
 
-  Future<void> _loadMoreStaff() async {
-    if (_isLoadingMore || !_hasMorePages || _isUsingMockData) return;
+  void _onDepartmentChanged(Department? newDepartment) {
+    if (newDepartment == null || newDepartment == _selectedDepartment) return;
 
     setState(() {
-      _isLoadingMore = true;
-      _currentMaxPages += 5;
+      _selectedDepartment = newDepartment;
+      _staffSearchController.clear();
     });
 
-    try {
-      final hocalar = await _scraperService.fetchHocalar(
-        maxPages: _currentMaxPages,
-      );
-      final newStaff = hocalar
-          .map(
-            (hoca) => AcademicStaff(
-              name: hoca.name,
-              email: hoca.email ?? '',
-              telephone: '',
-              faculty: hoca.title ?? '',
-              pastExperience: '',
-              imageUrl: hoca.imageUrl,
-              cvUrl: hoca.cvUrl,
-              sourceUrl: hoca.sourceUrl,
-              officeNumber: null,
-              building: null,
-            ),
-          )
-          .toList();
+    _loadAcademicStaff();
+  }
 
-      setState(() {
-        if (newStaff.length == _academicStaff.length) {
-          _hasMorePages = false;
-        } else {
-          _academicStaff = newStaff;
-          _filterStaff(_staffSearchController.text);
-        }
-        _isLoadingMore = false;
-      });
-    } catch (e) {
-      setState(() {
-        _isLoadingMore = false;
-      });
-    }
+  Future<void> _loadMoreStaff() async {
+    // Disabled for single department loading
+    return;
   }
 
   void _filterStaff(String query) {
@@ -313,6 +288,47 @@ class _HocaVeKuluepState extends State<HocaVeKuluep>
                 ],
               ),
             ),
+          // Department Dropdown
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            decoration: BoxDecoration(
+              color: Colors.grey.shade50,
+              border: Border(bottom: BorderSide(color: Colors.grey.shade300)),
+            ),
+            child: Row(
+              children: [
+                const Icon(
+                  Icons.school,
+                  color: Color.fromARGB(255, 136, 31, 96),
+                  size: 20,
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: DropdownButtonHideUnderline(
+                    child: DropdownButton<Department>(
+                      value: _selectedDepartment,
+                      isExpanded: true,
+                      icon: const Icon(Icons.arrow_drop_down),
+                      style: const TextStyle(
+                        fontSize: 14,
+                        color: Colors.black87,
+                      ),
+                      items: Departments.all.map((Department department) {
+                        return DropdownMenuItem<Department>(
+                          value: department,
+                          child: Text(
+                            department.name,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        );
+                      }).toList(),
+                      onChanged: _onDepartmentChanged,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
           // Search bar
           Padding(
             padding: const EdgeInsets.all(8.0),
@@ -344,40 +360,8 @@ class _HocaVeKuluepState extends State<HocaVeKuluep>
           Expanded(
             child: ListView.builder(
               padding: const EdgeInsets.all(8),
-              itemCount:
-                  _filteredStaff.length +
-                  (_hasMorePages && !_isUsingMockData ? 1 : 0),
+              itemCount: _filteredStaff.length,
               itemBuilder: (context, index) {
-                if (index == _filteredStaff.length) {
-                  // Load more button
-                  return Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Center(
-                      child: _isLoadingMore
-                          ? const CircularProgressIndicator(
-                              color: Color.fromARGB(255, 136, 31, 96),
-                            )
-                          : ElevatedButton.icon(
-                              onPressed: _loadMoreStaff,
-                              icon: const Icon(Icons.expand_more),
-                              label: const Text('Daha Fazla Yükle'),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: const Color.fromARGB(
-                                  255,
-                                  136,
-                                  31,
-                                  96,
-                                ),
-                                foregroundColor: Colors.white,
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 24,
-                                  vertical: 12,
-                                ),
-                              ),
-                            ),
-                    ),
-                  );
-                }
                 final staff = _filteredStaff[index];
                 return _buildStaffCard(staff);
               },
