@@ -1,35 +1,39 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
-import 'dart:html' as html;
 
 class MapPage extends StatelessWidget {
   const MapPage({super.key});
 
-  // 1. Kampüs Koordinatı
+  // 1. Kampüs koordinatı
   final double latitude1 = 40.901562939743194;
   final double longitude1 = 29.219376509577515;
 
-  // 2. Yeni Konum Koordinatı
+  // 2. Yeni konum koordinatı
   final double latitude2 = 40.902221896711495;
   final double longitude2 = 29.27526517498325;
 
-  void openMapsWebSafe(String url) {
+  // Web + Mobil uyumlu URL açma
+  Future<void> openMapsWebSafe(String url) async {
     if (kIsWeb) {
-      html.window.open(url, "_blank");
+      // Web'de normal launchUrlString açıyor
+      await launchUrlString(url);
     } else {
-      launchUrlString(url, mode: LaunchMode.externalApplication);
+      await launchUrlString(
+        url,
+        mode: LaunchMode.externalApplication, // Mobil için dış uygulamada aç
+      );
     }
   }
 
-  // İlk harita yönlendirme
+  // İlk kampüs
   void openMaps1() {
     final url =
         "https://www.google.com/maps/dir/?api=1&destination=$latitude1,$longitude1&travelmode=driving";
     openMapsWebSafe(url);
   }
 
-  // İkinci harita yönlendirme
+  // İkinci kampüs
   void openMaps2() {
     final url =
         "https://www.google.com/maps/dir/?api=1&destination=$latitude2,$longitude2&travelmode=driving";
@@ -75,9 +79,8 @@ class MapPage extends StatelessWidget {
 
           const SizedBox(height: 15),
 
-          // ⭐ BUTON 1
           _buildButton(
-            text: "Google Maps ile Yol Tarifi Al (Konum 1)",
+            text: "Google Maps ile Yol Tarifi Al (Kartal Kampüsü)",
             onPressed: openMaps1,
           ),
 
@@ -104,9 +107,8 @@ class MapPage extends StatelessWidget {
 
           const SizedBox(height: 15),
 
-          // ⭐ BUTON 2
           _buildButton(
-            text: "Google Maps ile Yol Tarifi Al (Konum 2)",
+            text: "Google Maps ile Yol Tarifi Al (Halil Kaya Kampüsü)",
             onPressed: openMaps2,
           ),
 
@@ -116,7 +118,7 @@ class MapPage extends StatelessWidget {
     );
   }
 
-  // ---------- WIDGET: HARİTA KUTUSU ----------
+  // ---------- Harita Kutusu ----------
   Widget _buildMapBox(
     BuildContext context, {
     required String tag,
@@ -151,7 +153,7 @@ class MapPage extends StatelessWidget {
     );
   }
 
-  // ---------- WIDGET: BUTON ----------
+  // ---------- Buton ----------
   Widget _buildButton({required String text, required VoidCallback onPressed}) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),

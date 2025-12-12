@@ -27,7 +27,7 @@ class _HomePageState extends State<HomePage> {
 
     // 🔥 Dijital Kimlik
     const DigitalIDPage(),
-    
+
     // 🔥 Akademik Bilgi (Kadro & Kulüpler)
     const HocaVeKuluep(),
   ];
@@ -78,7 +78,10 @@ class _HomePageState extends State<HomePage> {
           ),
           BottomNavigationBarItem(icon: Icon(Icons.map), label: "Harita"),
           BottomNavigationBarItem(icon: Icon(Icons.badge), label: "Kimlik"),
-          BottomNavigationBarItem(icon: Icon(Icons.school), label: "Hoca Ve Kulüp"),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.school),
+            label: "Hocalar Ve Kulüpler",
+          ),
         ],
       ),
     );

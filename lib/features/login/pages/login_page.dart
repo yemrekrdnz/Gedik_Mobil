@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import 'package:gedik_mobil/utils/firebase_errors.dart';
 import '../../home/pages/home_page.dart';
 import 'signup_page.dart';
@@ -18,7 +19,37 @@ class _LoginPageState extends State<LoginPage> {
   bool isPasswordVisible = false;
   String? errorMessage;
 
-  // 🔥 Firebase Login
+  // 📌 GOOGLE İLE GİRİŞ FONKSİYONU
+  Future<void> signInWithGoogle() async {
+    try {
+      // 1) Google hesabı seçtir
+      final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
+      if (googleUser == null) return;
+
+      // 2) Google token bilgilerini al
+      final GoogleSignInAuthentication googleAuth =
+          await googleUser.authentication;
+
+      // 3) Firebase credential oluştur
+      final credential = GoogleAuthProvider.credential(
+        accessToken: googleAuth.accessToken,
+        idToken: googleAuth.idToken,
+      );
+
+      // 4) Firebase giriş yap
+      await FirebaseAuth.instance.signInWithCredential(credential);
+
+      // 5) Başarılı → HomePage
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const HomePage()),
+      );
+    } catch (e) {
+      setState(() => errorMessage = "Google ile giriş yapılamadı: $e");
+    }
+  }
+
+  // 🔥 Firebase Login (mail + şifre)
   Future<void> login() async {
     String studentNo = studentNumberController.text.trim();
     String password = passwordController.text.trim();
@@ -39,7 +70,6 @@ class _LoginPageState extends State<LoginPage> {
     }
 
     try {
-      // Email formatı → öğrenciNo@gedik.edu.tr
       String email = "$studentNo@gedik.edu.tr";
 
       await FirebaseAuth.instance.signInWithEmailAndPassword(
@@ -47,7 +77,6 @@ class _LoginPageState extends State<LoginPage> {
         password: password,
       );
 
-      // Başarılı → HomePage
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => const HomePage()),
@@ -66,12 +95,12 @@ class _LoginPageState extends State<LoginPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            // 🔥 LOGO
+            // LOGO
             Image.asset("assets/images/gedik.png", width: 600, height: 300),
 
             const SizedBox(height: 30),
 
-            // 🔥 HATA MESAJI
+            // HATA MESAJI
             if (errorMessage != null)
               Container(
                 padding: const EdgeInsets.all(12),
@@ -96,7 +125,7 @@ class _LoginPageState extends State<LoginPage> {
                 ),
               ),
 
-            // 🔥 Öğrenci Numarası
+            // Öğrenci Numarası
             TextField(
               controller: studentNumberController,
               keyboardType: TextInputType.number,
@@ -111,7 +140,7 @@ class _LoginPageState extends State<LoginPage> {
 
             const SizedBox(height: 20),
 
-            // 🔥 Şifre Alanı
+            // Şifre Alanı
             TextField(
               controller: passwordController,
               obscureText: !isPasswordVisible,
@@ -133,7 +162,7 @@ class _LoginPageState extends State<LoginPage> {
 
             const SizedBox(height: 30),
 
-            // 🔥 Giriş Yap Butonu
+            // 📌 Giriş Yap Butonu
             SizedBox(
               width: double.infinity,
               height: 55,
@@ -154,7 +183,29 @@ class _LoginPageState extends State<LoginPage> {
 
             const SizedBox(height: 20),
 
-            // 🔥 Kayıt Ol Linki
+            // 📌 GOOGLE İLE GİRİŞ BUTONU
+            SizedBox(
+              width: double.infinity,
+              height: 55,
+              child: OutlinedButton.icon(
+                icon: Image.asset("assets/images/google.png", height: 24),
+                label: const Text(
+                  "Google ile Giriş Yap",
+                  style: TextStyle(fontSize: 16, color: Colors.black87),
+                ),
+                style: OutlinedButton.styleFrom(
+                  side: const BorderSide(color: Colors.black54),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                onPressed: signInWithGoogle,
+              ),
+            ),
+
+            const SizedBox(height: 20),
+
+            // Kayıt Ol Linki
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
