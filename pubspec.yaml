@@ -16,8 +16,10 @@ dependencies:
   # Firebase
   firebase_core: ^4.2.1
   firebase_auth: ^6.1.2
+  google_sign_in: ^6.1.0
   cloud_firestore: ^6.1.0
   firebase_app_check: ^0.4.1+2
+ 
 
   # Harita yönlendirme
   url_launcher: ^6.2.5

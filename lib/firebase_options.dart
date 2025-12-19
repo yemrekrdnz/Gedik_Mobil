@@ -42,12 +42,12 @@ class DefaultFirebaseOptions {
 
   static const FirebaseOptions web = FirebaseOptions(
     apiKey: 'AIzaSyBHT4xWnKarNNFpyIzvfF6wAE7bhnbfyMQ',
-    appId: '1:699965936110:web:965a3c8df676b7ca54feff',
+    appId: '1:699965936110:web:e468189c30f2c4cf54feff',
     messagingSenderId: '699965936110',
     projectId: 'gedikmobil',
     authDomain: 'gedikmobil.firebaseapp.com',
     storageBucket: 'gedikmobil.firebasestorage.app',
-    measurementId: 'G-N9MFWSY4SL',
+    measurementId: 'G-T8PCBK1YS8',
   );
 
   static const FirebaseOptions android = FirebaseOptions(
@@ -78,11 +78,11 @@ class DefaultFirebaseOptions {
 
   static const FirebaseOptions windows = FirebaseOptions(
     apiKey: 'AIzaSyBHT4xWnKarNNFpyIzvfF6wAE7bhnbfyMQ',
-    appId: '1:699965936110:web:965a3c8df676b7ca54feff',
+    appId: '1:699965936110:web:e468189c30f2c4cf54feff',
     messagingSenderId: '699965936110',
     projectId: 'gedikmobil',
     authDomain: 'gedikmobil.firebaseapp.com',
     storageBucket: 'gedikmobil.firebasestorage.app',
-    measurementId: 'G-N9MFWSY4SL',
+    measurementId: 'G-T8PCBK1YS8',
   );
 }

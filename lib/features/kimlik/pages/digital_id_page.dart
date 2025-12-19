@@ -101,7 +101,7 @@ class DigitalIDPage extends StatelessWidget {
                   const SizedBox(height: 20),
 
                   Text(
-                    data["name"] ?? "",
+                    data["name"] ?? "İsim Belirtilmemiş",
                     style: const TextStyle(
                       fontSize: 26,
                       fontWeight: FontWeight.bold,
@@ -114,17 +114,17 @@ class DigitalIDPage extends StatelessWidget {
                   _infoRow(
                     Icons.confirmation_number,
                     "Öğrenci No",
-                    data["studentNumber"],
+                    data["studentNumber"] ?? "Belirtilmemiş",
                   ),
                   _divider(),
-                  _infoRow(Icons.school, "Bölüm", data["department"]),
+                  _infoRow(Icons.school, "Bölüm", data["department"] ?? "Belirtilmemiş"),
                   _divider(),
-                  _infoRow(Icons.class_, "Sınıf", "${data["class"]}. Sınıf"),
+                  _infoRow(Icons.class_, "Sınıf", data["class"] != null ? "${data["class"]}. Sınıf" : "Belirtilmemiş"),
                   _divider(),
                   _infoRow(
                     Icons.email,
                     "Mail",
-                    "${data["studentNumber"]}@gedik.edu.tr",
+                    data["email"] ?? "${data["studentNumber"] ?? ""}@gedik.edu.tr",
                   ),
                 ],
               ),

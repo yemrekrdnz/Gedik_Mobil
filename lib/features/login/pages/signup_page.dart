@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:gedik_mobil/features/login/pages/login_page.dart';
+import 'package:gedik_mobil/services/auth_service.dart';
 
 class SignUpPage extends StatefulWidget {
   const SignUpPage({super.key});
@@ -15,6 +15,7 @@ class _SignUpPageState extends State<SignUpPage> {
   final TextEditingController passwordCtrl = TextEditingController();
   final TextEditingController confirmPasswordCtrl = TextEditingController();
   final TextEditingController nameCtrl = TextEditingController();
+  final AuthService _authService = AuthService();
 
   String? errorMessage;
   bool showPassword = false;
@@ -100,29 +101,19 @@ class _SignUpPageState extends State<SignUpPage> {
       setState(() => errorMessage = "Şifreler eşleşmiyor.");
       return;
     }
-
     try {
       String email = "$studentNo@gedik.edu.tr";
 
-      // Kullanıcı oluşturma
-      UserCredential userCred = await FirebaseAuth.instance
-          .createUserWithEmailAndPassword(email: email, password: password);
-
-      // Firestore kayıt
-      await FirebaseFirestore.instance
-          .collection("users")
-          .doc(userCred.user!.uid)
-          .set({
-            "studentNumber": studentNo,
-            "name": fullName,
-            "department": selectedDepartment,
-            "class": selectedClass,
-            "email": email,
-            "createdAt": DateTime.now(),
-          });
+      // Kullanıcı oluşturma - AuthService kullan
+      await _authService.signUpWithEmailAndPassword(
+        email,
+        password,
+        fullName,
+        studentNo,
+      );
 
       // Firebase otomatik login olduğu için logout yapıyoruz
-      await FirebaseAuth.instance.signOut();
+      await _authService.signOut();
 
       // küçük delay (web için)
       await Future.delayed(const Duration(milliseconds: 300));

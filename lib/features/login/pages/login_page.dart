@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:gedik_mobil/utils/firebase_errors.dart';
+import 'package:gedik_mobil/services/auth_service.dart';
+import 'package:gedik_mobil/models/user_role.dart';
 import '../../home/pages/home_page.dart';
+import '../../admin/pages/admin_panel.dart';
 import 'signup_page.dart';
 
 class LoginPage extends StatefulWidget {
@@ -14,11 +17,30 @@ class LoginPage extends StatefulWidget {
 class _LoginPageState extends State<LoginPage> {
   final TextEditingController studentNumberController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
+  final AuthService _authService = AuthService();
 
   bool isPasswordVisible = false;
   String? errorMessage;
+  bool isLoading = false;
 
-  // 🔥 Firebase Login
+  // 📌 Kullanıcıyı rolüne göre yönlendir
+  Future<void> _navigateBasedOnRole(String uid) async {
+    UserRole role = await _authService.getUserRole(uid);
+
+    if (role == UserRole.admin) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const AdminPanel()),
+      );
+    } else {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const HomePage()),
+      );
+    }
+  }
+
+  // 🔥 Firebase Login (mail + şifre)
   Future<void> login() async {
     String studentNo = studentNumberController.text.trim();
     String password = passwordController.text.trim();
@@ -38,22 +60,20 @@ class _LoginPageState extends State<LoginPage> {
       return;
     }
 
+    setState(() => isLoading = true);
     try {
-      // Email formatı → öğrenciNo@gedik.edu.tr
       String email = "$studentNo@gedik.edu.tr";
 
-      await FirebaseAuth.instance.signInWithEmailAndPassword(
-        email: email,
-        password: password,
+      UserCredential userCredential = await _authService.signInWithEmailAndPassword(
+        email,
+        password,
       );
 
-      // Başarılı → HomePage
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const HomePage()),
-      );
+      await _navigateBasedOnRole(userCredential.user!.uid);
     } on FirebaseAuthException catch (e) {
       setState(() => errorMessage = firebaseErrorToTurkish(e.code));
+    } finally {
+      setState(() => isLoading = false);
     }
   }
 
@@ -66,12 +86,12 @@ class _LoginPageState extends State<LoginPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            // 🔥 LOGO
+            // LOGO
             Image.asset("assets/images/gedik.png", width: 600, height: 300),
 
             const SizedBox(height: 30),
 
-            // 🔥 HATA MESAJI
+            // HATA MESAJI
             if (errorMessage != null)
               Container(
                 padding: const EdgeInsets.all(12),
@@ -96,7 +116,7 @@ class _LoginPageState extends State<LoginPage> {
                 ),
               ),
 
-            // 🔥 Öğrenci Numarası
+            // Öğrenci Numarası
             TextField(
               controller: studentNumberController,
               keyboardType: TextInputType.number,
@@ -111,7 +131,7 @@ class _LoginPageState extends State<LoginPage> {
 
             const SizedBox(height: 20),
 
-            // 🔥 Şifre Alanı
+            // Şifre Alanı
             TextField(
               controller: passwordController,
               obscureText: !isPasswordVisible,
@@ -133,7 +153,7 @@ class _LoginPageState extends State<LoginPage> {
 
             const SizedBox(height: 30),
 
-            // 🔥 Giriş Yap Butonu
+            // 📌 Giriş Yap Butonu
             SizedBox(
               width: double.infinity,
               height: 55,
@@ -144,17 +164,26 @@ class _LoginPageState extends State<LoginPage> {
                     borderRadius: BorderRadius.circular(12),
                   ),
                 ),
-                onPressed: login,
-                child: const Text(
-                  "Giriş Yap",
-                  style: TextStyle(fontSize: 18, color: Colors.white),
-                ),
+                onPressed: isLoading ? null : login,
+                child: isLoading
+                    ? const SizedBox(
+                        height: 24,
+                        width: 24,
+                        child: CircularProgressIndicator(
+                          color: Colors.white,
+                          strokeWidth: 2,
+                        ),
+                      )
+                    : const Text(
+                        "Giriş Yap",
+                        style: TextStyle(fontSize: 18, color: Colors.white),
+                      ),
               ),
             ),
 
             const SizedBox(height: 20),
 
-            // 🔥 Kayıt Ol Linki
+            // Kayıt Ol Linki
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
