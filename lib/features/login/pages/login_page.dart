@@ -4,7 +4,8 @@ import 'package:gedik_mobil/utils/firebase_errors.dart';
 import 'package:gedik_mobil/services/auth_service.dart';
 import 'package:gedik_mobil/models/user_role.dart';
 import '../../home/pages/home_page.dart';
-import '../../admin/pages/admin_panel.dart';
+import 'package:gedik_mobil/admin/pages/admin_panel.dart';
+
 import 'signup_page.dart';
 
 class LoginPage extends StatefulWidget {
