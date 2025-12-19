@@ -1,32 +1,14 @@
 plugins {
     id("com.android.application")
     id("kotlin-android")
-    id("com.google.gms.google-services") version "4.4.4" apply false
-    }
+    // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
+    id("dev.flutter.flutter-gradle-plugin")
+}
 
 android {
-    namespace = "com.android.application" // ← Senin package name’ine göre düzenle
-    compileSdk = 34
-
-    defaultConfig {
-        applicationId = "com.android.application" // ← Aynısını kullan
-        minSdk = 23
-        targetSdk = 34
-        versionCode = 1
-        versionName = "1.0"
-
-        multiDexEnabled = true
-    }
-
-    buildTypes {
-        release {
-            isMinifyEnabled = false
-            proguardFiles(
-                getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro"
-            )
-        }
-    }
+    namespace = "com.example.gedik_mobil"
+    compileSdk = flutter.compileSdkVersion
+    ndkVersion = flutter.ndkVersion
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
@@ -34,18 +16,29 @@ android {
     }
 
     kotlinOptions {
-        jvmTarget = "17"
+        jvmTarget = JavaVersion.VERSION_17.toString()
+    }
+
+    defaultConfig {
+        // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
+        applicationId = "com.example.gedik_mobil"
+        // You can update the following values to match your application needs.
+        // For more information, see: https://flutter.dev/to/review-gradle-config.
+        minSdk = flutter.minSdkVersion
+        targetSdk = flutter.targetSdkVersion
+        versionCode = flutter.versionCode
+        versionName = flutter.versionName
+    }
+
+    buildTypes {
+        release {
+            // TODO: Add your own signing config for the release build.
+            // Signing with the debug keys for now, so `flutter run --release` works.
+            signingConfig = signingConfigs.getByName("debug")
+        }
     }
 }
 
-dependencies {
-    // Firebase BOM (sürüm yönetimi)
-    implementation(platform("com.google.firebase:firebase-bom:34.6.0"))
-    // Firebase ürünleri
-    implementation("com.google.firebase:firebase-auth-ktx")
-    implementation("com.google.firebase:firebase-firestore-ktx")
-
-    // Zorunlu Flutter / Android bağımlılıkları
-    implementation("androidx.multidex:multidex:2.0.1")
+flutter {
+    source = "../.."
 }
-    
