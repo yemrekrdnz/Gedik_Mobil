@@ -4,7 +4,6 @@ import 'package:gedik_mobil/features/login/pages/login_page.dart';
 import 'announcement_management_page.dart';
 import 'cafeteria_management_page.dart';
 import 'request_suggestion_management_page.dart';
-import 'program_management_page.dart';
 
 class AdminPanel extends StatefulWidget {
   const AdminPanel({super.key});
@@ -21,27 +20,18 @@ class _AdminPanelState extends State<AdminPanel> {
     const AdminDashboard(),
     const AnnouncementManagementPage(),
     const CafeteriaManagementPage(),
-    const ProgramManagementPage(),
     const RequestSuggestionManagementPage(),
   ];
 
   Future<void> logout() async {
-    try {
-      await _authService.signOut();
-      
-      if (!mounted) return;
-      
-      Navigator.pushAndRemoveUntil(
-        context,
-        MaterialPageRoute(builder: (_) => const LoginPage()),
-        (route) => false,
-      );
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Çıkış hatası: $e')),
-      );
-    }
+    await _authService.signOut();
+    if (!mounted) return;
+
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(builder: (_) => const LoginPage()),
+      (route) => false,
+    );
   }
 
   @override
@@ -52,11 +42,7 @@ class _AdminPanelState extends State<AdminPanel> {
         backgroundColor: const Color.fromARGB(255, 136, 31, 96),
         foregroundColor: Colors.white,
         actions: [
-          IconButton(
-            icon: const Icon(Icons.logout),
-            onPressed: logout,
-            tooltip: "Çıkış Yap",
-          ),
+          IconButton(icon: const Icon(Icons.logout), onPressed: logout),
         ],
       ),
       body: _pages[currentIndex],
@@ -64,13 +50,10 @@ class _AdminPanelState extends State<AdminPanel> {
         currentIndex: currentIndex,
         selectedItemColor: const Color.fromARGB(255, 136, 31, 96),
         unselectedItemColor: Colors.grey,
-        onTap: (i) => setState(() => currentIndex = i),
         type: BottomNavigationBarType.fixed,
+        onTap: (i) => setState(() => currentIndex = i),
         items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.dashboard),
-            label: "Panel",
-          ),
+          BottomNavigationBarItem(icon: Icon(Icons.dashboard), label: "Panel"),
           BottomNavigationBarItem(
             icon: Icon(Icons.announcement),
             label: "Duyurular",
@@ -78,10 +61,6 @@ class _AdminPanelState extends State<AdminPanel> {
           BottomNavigationBarItem(
             icon: Icon(Icons.restaurant_menu),
             label: "Yemekhane",
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.calendar_today),
-            label: "Program",
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.feedback),
@@ -98,8 +77,8 @@ class AdminDashboard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(16.0),
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -111,107 +90,137 @@ class AdminDashboard extends StatelessWidget {
               color: Color.fromARGB(255, 136, 31, 96),
             ),
           ),
-          const SizedBox(height: 20),
-          Expanded(
-            child: GridView.count(
-              crossAxisCount: 2,
-              crossAxisSpacing: 16,
-              mainAxisSpacing: 16,
-              children: [
-                _buildDashboardCard(
-                  context,
-                  "Duyurular",
-                  Icons.announcement,
-                  Colors.blue,
-                  () => Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => const AnnouncementManagementPage(),
-                    ),
-                  ),
-                ),
-                _buildDashboardCard(
-                  context,
-                  "Yemekhane Menüsü",
-                  Icons.restaurant_menu,
-                  Colors.green,
-                  () => Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => const CafeteriaManagementPage(),
-                    ),
-                  ),
-                ),
-                _buildDashboardCard(
-                  context,
-                  "Program Yönetimi",
-                  Icons.calendar_today,
-                  Colors.orange,
-                  () => Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => const ProgramManagementPage(),
-                    ),
-                  ),
-                ),
-                _buildDashboardCard(
-                  context,
-                  "İstek & Öneri",
-                  Icons.feedback,
-                  Colors.purple,
-                  () => Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => const RequestSuggestionManagementPage(),
-                    ),
-                  ),
-                ),
-              ],
+          const SizedBox(height: 24),
+
+          HoverDashboardCard(
+            title: "Duyurular",
+            icon: Icons.announcement,
+            color: Colors.blue,
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => const AnnouncementManagementPage(),
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+
+          HoverDashboardCard(
+            title: "Yemekhane Menüsü",
+            icon: Icons.restaurant_menu,
+            color: Colors.green,
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => const CafeteriaManagementPage(),
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+
+          HoverDashboardCard(
+            title: "İstek & Öneriler",
+            icon: Icons.feedback,
+            color: Colors.purple,
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => const RequestSuggestionManagementPage(),
+              ),
             ),
           ),
         ],
       ),
     );
   }
+}
 
-  Widget _buildDashboardCard(
-    BuildContext context,
-    String title,
-    IconData icon,
-    Color color,
-    VoidCallback onTap,
-  ) {
-    return Card(
-      elevation: 4,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
-        child: Container(
-          padding: const EdgeInsets.all(16),
+/// 🔥 HOVER ANİMASYONLU KART
+class HoverDashboardCard extends StatefulWidget {
+  final String title;
+  final IconData icon;
+  final Color color;
+  final VoidCallback onTap;
+
+  const HoverDashboardCard({
+    super.key,
+    required this.title,
+    required this.icon,
+    required this.color,
+    required this.onTap,
+  });
+
+  @override
+  State<HoverDashboardCard> createState() => _HoverDashboardCardState();
+}
+
+class _HoverDashboardCardState extends State<HoverDashboardCard> {
+  bool isHover = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      onEnter: (_) => setState(() => isHover = true),
+      onExit: (_) => setState(() => isHover = false),
+      child: AnimatedScale(
+        scale: isHover ? 1.03 : 1.0,
+        duration: const Duration(milliseconds: 200),
+        curve: Curves.easeOut,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          curve: Curves.easeOut,
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(16),
-            gradient: LinearGradient(
-              colors: [color.withOpacity(0.7), color],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-          ),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(icon, size: 48, color: Colors.white),
-              const SizedBox(height: 12),
-              Text(
-                title,
-                textAlign: TextAlign.center,
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(isHover ? 0.25 : 0.15),
+                blurRadius: isHover ? 18 : 10,
+                offset: const Offset(0, 6),
               ),
             ],
+          ),
+          child: Card(
+            elevation: 0,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: InkWell(
+              onTap: widget.onTap,
+              borderRadius: BorderRadius.circular(16),
+              child: Container(
+                height: 100,
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(16),
+                  gradient: LinearGradient(
+                    colors: [widget.color.withOpacity(0.75), widget.color],
+                    begin: Alignment.centerLeft,
+                    end: Alignment.centerRight,
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Icon(widget.icon, size: 42, color: Colors.white),
+                    const SizedBox(width: 16),
+                    Text(
+                      widget.title,
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                    const Spacer(),
+                    const Icon(
+                      Icons.arrow_forward_ios,
+                      color: Colors.white,
+                      size: 18,
+                    ),
+                  ],
+                ),
+              ),
+            ),
           ),
         ),
       ),

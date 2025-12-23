@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:gedik_mobil/features/login/pages/login_page.dart';
-import 'package:gedik_mobil/services/auth_service.dart';
 
 class SignUpPage extends StatefulWidget {
   const SignUpPage({super.key});
@@ -15,7 +15,6 @@ class _SignUpPageState extends State<SignUpPage> {
   final TextEditingController passwordCtrl = TextEditingController();
   final TextEditingController confirmPasswordCtrl = TextEditingController();
   final TextEditingController nameCtrl = TextEditingController();
-  final AuthService _authService = AuthService();
 
   String? errorMessage;
   bool showPassword = false;
@@ -41,20 +40,18 @@ class _SignUpPageState extends State<SignUpPage> {
   void showSuccessDialog() {
     showDialog(
       context: context,
-      barrierDismissible: false, // dışarı basınca kapanmasın
+      barrierDismissible: false,
       builder: (context) {
         return AlertDialog(
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
           ),
           title: const Text("🎉 Kayıt Başarılı"),
-          content: const Text(
-            "Hesabınız başarıyla oluşturuldu. Giriş yapabilirsiniz.",
-          ),
+          content: const Text("Hesabınız oluşturuldu, giriş yapabilirsiniz."),
           actions: [
             TextButton(
               onPressed: () {
-                Navigator.pop(context); // popup kapat
+                Navigator.pop(context);
                 Navigator.pushReplacement(
                   context,
                   MaterialPageRoute(builder: (context) => const LoginPage()),
@@ -68,13 +65,14 @@ class _SignUpPageState extends State<SignUpPage> {
     );
   }
 
-  // 🔥 FIREBASE SIGNUP
+  // 🔥 FIREBASE SIGNUP + FIRESTORE KAYIT
   Future<void> signUp() async {
     String studentNo = studentNoCtrl.text.trim();
     String password = passwordCtrl.text.trim();
     String confirmPassword = confirmPasswordCtrl.text.trim();
     String fullName = nameCtrl.text.trim();
 
+    // VALIDATION
     if (studentNo.isEmpty ||
         password.isEmpty ||
         confirmPassword.isEmpty ||
@@ -86,9 +84,7 @@ class _SignUpPageState extends State<SignUpPage> {
     }
 
     if (studentNo.length < 8) {
-      setState(
-        () => errorMessage = "Öğrenci numarası en az 8 karakter olmalı.",
-      );
+      setState(() => errorMessage = "Öğrenci numarası en az 8 haneli olmalı.");
       return;
     }
 
@@ -101,28 +97,35 @@ class _SignUpPageState extends State<SignUpPage> {
       setState(() => errorMessage = "Şifreler eşleşmiyor.");
       return;
     }
+
     try {
       String email = "$studentNo@gedik.edu.tr";
 
-      // Kullanıcı oluşturma - AuthService kullan
-      await _authService.signUpWithEmailAndPassword(
-        email,
-        password,
-        fullName,
-        studentNo,
-      );
+      // 🔥 Firebase Authentication: kullanıcı oluştur
+      UserCredential userCred = await FirebaseAuth.instance
+          .createUserWithEmailAndPassword(email: email, password: password);
 
-      // Firebase otomatik login olduğu için logout yapıyoruz
-      await _authService.signOut();
+      // 🔥 Firestore: ek bilgiler kaydedilir
+      await FirebaseFirestore.instance
+          .collection("users")
+          .doc(userCred.user!.uid)
+          .set({
+            "name": fullName,
+            "email": email,
+            "studentNumber": studentNo,
+            "department": selectedDepartment,
+            "class": selectedClass,
+            "createdAt": DateTime.now(),
+          });
 
-      // küçük delay (web için)
-      await Future.delayed(const Duration(milliseconds: 300));
+      // 🔥 Otomatik login'i kapatmak için çıkış yap
+      await FirebaseAuth.instance.signOut();
 
-      // 🎉 BAŞARI POPUP AÇ
+      // 🎉 Popup aç
       showSuccessDialog();
     } on FirebaseAuthException catch (e) {
       setState(() {
-        errorMessage = e.message ?? "Kayıt sırasında bir hata oluştu.";
+        errorMessage = e.message ?? "Kayıt sırasında hata oluştu.";
       });
     }
   }
@@ -218,7 +221,7 @@ class _SignUpPageState extends State<SignUpPage> {
             ),
             const SizedBox(height: 20),
 
-            // Şifre
+            // ŞİFRE
             TextField(
               controller: passwordCtrl,
               obscureText: !showPassword,
@@ -238,7 +241,7 @@ class _SignUpPageState extends State<SignUpPage> {
             ),
             const SizedBox(height: 20),
 
-            // Şifre tekrar
+            // ŞİFRE TEKRAR
             TextField(
               controller: confirmPasswordCtrl,
               obscureText: !showConfirmPassword,
@@ -262,7 +265,7 @@ class _SignUpPageState extends State<SignUpPage> {
             ),
             const SizedBox(height: 30),
 
-            // Kayıt Ol BUTONU
+            // BUTON
             SizedBox(
               width: double.infinity,
               height: 55,
