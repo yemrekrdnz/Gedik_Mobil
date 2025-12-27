@@ -9,6 +9,7 @@ import 'cafeteria_page.dart';
 import 'announcements_page.dart';
 import 'program_page.dart';
 import 'request_suggestion_page.dart';
+import 'career_plan_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -59,6 +60,12 @@ class _HomePageState extends State<HomePage> {
         Navigator.push(
           context,
           MaterialPageRoute(builder: (_) => const RequestSuggestionPage()),
+        );
+        break;
+      case 'career_plan':
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const CareerPlanPage()),
         );
         break;
       case 'logout':
@@ -117,6 +124,13 @@ class _HomePageState extends State<HomePage> {
                 child: ListTile(
                   leading: Icon(Icons.feedback),
                   title: Text("Dilek / İstek"),
+                ),
+              ),
+              PopupMenuItem(
+                value: 'career_plan',
+                child: ListTile(
+                  leading: Icon(Icons.psychology),
+                  title: Text("Kariyer Planım"),
                 ),
               ),
               PopupMenuDivider(),
