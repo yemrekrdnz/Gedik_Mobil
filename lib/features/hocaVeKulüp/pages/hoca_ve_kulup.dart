@@ -24,14 +24,11 @@ class _HocaVeKuluepState extends State<HocaVeKuluep>
 
   bool _isLoadingStaff = false;
   bool _isLoadingClubs = false;
-  bool _isLoadingMore = false;
 
   String? _staffError;
   String? _clubsError;
 
   bool _isUsingMockData = false;
-  int _currentMaxPages = 5;
-  bool _hasMorePages = true;
 
   Department _selectedDepartment = Departments.defaultDepartment;
 
@@ -62,10 +59,6 @@ class _HocaVeKuluepState extends State<HocaVeKuluep>
     setState(() {
       _isLoadingStaff = true;
       _staffError = null;
-      if (reset) {
-        _currentMaxPages = 5;
-        _hasMorePages = false; // Disable load more for single department
-      }
     });
 
     try {
@@ -114,11 +107,6 @@ class _HocaVeKuluepState extends State<HocaVeKuluep>
     });
 
     _loadAcademicStaff();
-  }
-
-  Future<void> _loadMoreStaff() async {
-    // Disabled for single department loading
-    return;
   }
 
   void _filterStaff(String query) {

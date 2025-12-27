@@ -3,7 +3,7 @@ import 'package:gedik_mobil/services/auth_service.dart';
 import 'package:gedik_mobil/features/login/pages/login_page.dart';
 import 'package:gedik_mobil/features/map/pages/map_page.dart';
 import 'package:gedik_mobil/features/kimlik/pages/digital_id_page.dart';
-import 'package:gedik_mobil/features/hocaVeKuluep/pages/hoca_ve_kuluep.dart';
+import 'package:gedik_mobil/features/hocaVeKul%C3%BCp/pages/hoca_ve_kulup.dart';
 
 import 'cafeteria_page.dart';
 import 'announcements_page.dart';
