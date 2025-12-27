@@ -15,6 +15,7 @@ class _SignUpPageState extends State<SignUpPage> {
   final TextEditingController passwordCtrl = TextEditingController();
   final TextEditingController confirmPasswordCtrl = TextEditingController();
   final TextEditingController nameCtrl = TextEditingController();
+  final TextEditingController phoneCtrl = TextEditingController();
 
   String? errorMessage;
   bool showPassword = false;
@@ -36,50 +37,53 @@ class _SignUpPageState extends State<SignUpPage> {
 
   final List<String> classList = ["1", "2", "3", "4"];
 
-  // 🎉 KAYIT BAŞARILI POPUP
   void showSuccessDialog() {
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (context) {
-        return AlertDialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        title: const Text("🎉 Kayıt Başarılı"),
+        content: const Text("Hesabınız oluşturuldu, giriş yapabilirsiniz."),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (_) => const LoginPage()),
+              );
+            },
+            child: const Text("Tamam"),
           ),
-          title: const Text("🎉 Kayıt Başarılı"),
-          content: const Text("Hesabınız oluşturuldu, giriş yapabilirsiniz."),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.pop(context);
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(builder: (context) => const LoginPage()),
-                );
-              },
-              child: const Text("Tamam"),
-            ),
-          ],
-        );
-      },
+        ],
+      ),
     );
   }
 
-  // 🔥 FIREBASE SIGNUP + FIRESTORE KAYIT
   Future<void> signUp() async {
     String studentNo = studentNoCtrl.text.trim();
     String password = passwordCtrl.text.trim();
     String confirmPassword = confirmPasswordCtrl.text.trim();
     String fullName = nameCtrl.text.trim();
+    String phone = phoneCtrl.text.trim();
 
-    // VALIDATION
     if (studentNo.isEmpty ||
         password.isEmpty ||
         confirmPassword.isEmpty ||
         fullName.isEmpty ||
+        phone.isEmpty ||
         selectedDepartment == null ||
         selectedClass == null) {
       setState(() => errorMessage = "Lütfen tüm alanları doldurun.");
+      return;
+    }
+
+    if (!phone.startsWith("+90") || phone.length != 13) {
+      setState(
+        () =>
+            errorMessage = "Telefon numarası +90XXXXXXXXXX formatında olmalı.",
+      );
       return;
     }
 
@@ -101,11 +105,9 @@ class _SignUpPageState extends State<SignUpPage> {
     try {
       String email = "$studentNo@gedik.edu.tr";
 
-      // 🔥 Firebase Authentication: kullanıcı oluştur
       UserCredential userCred = await FirebaseAuth.instance
           .createUserWithEmailAndPassword(email: email, password: password);
 
-      // 🔥 Firestore: ek bilgiler kaydedilir
       await FirebaseFirestore.instance
           .collection("users")
           .doc(userCred.user!.uid)
@@ -113,20 +115,19 @@ class _SignUpPageState extends State<SignUpPage> {
             "name": fullName,
             "email": email,
             "studentNumber": studentNo,
+            "phone": phone,
             "department": selectedDepartment,
             "class": selectedClass,
             "createdAt": DateTime.now(),
+            "role": "user",
           });
 
-      // 🔥 Otomatik login'i kapatmak için çıkış yap
       await FirebaseAuth.instance.signOut();
-
-      // 🎉 Popup aç
       showSuccessDialog();
     } on FirebaseAuthException catch (e) {
-      setState(() {
-        errorMessage = e.message ?? "Kayıt sırasında hata oluştu.";
-      });
+      setState(
+        () => errorMessage = e.message ?? "Kayıt sırasında hata oluştu.",
+      );
     }
   }
 
@@ -143,8 +144,6 @@ class _SignUpPageState extends State<SignUpPage> {
         padding: const EdgeInsets.all(24),
         child: Column(
           children: [
-            const SizedBox(height: 20),
-
             if (errorMessage != null)
               Container(
                 padding: const EdgeInsets.all(12),
@@ -160,112 +159,52 @@ class _SignUpPageState extends State<SignUpPage> {
                 ),
               ),
 
-            // AD SOYAD
-            TextField(
-              controller: nameCtrl,
-              decoration: InputDecoration(
-                labelText: "Ad Soyad",
-                prefixIcon: const Icon(Icons.person),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
+            _input(nameCtrl, "Ad Soyad", Icons.person),
+            _input(
+              studentNoCtrl,
+              "Öğrenci Numarası",
+              Icons.numbers,
+              isNumber: true,
+            ),
+            _input(
+              phoneCtrl,
+              "Telefon (+90XXXXXXXXXX)",
+              Icons.phone,
+              isPhone: true,
+            ),
+
+            const SizedBox(height: 20),
+            _dropdown(
+              "Bölüm",
+              departmentList,
+              selectedDepartment,
+              (v) => setState(() => selectedDepartment = v),
             ),
             const SizedBox(height: 20),
+            _dropdown(
+              "Sınıf",
+              classList,
+              selectedClass,
+              (v) => setState(() => selectedClass = v),
+              suffix: ". Sınıf",
+            ),
 
-            // ÖĞRENCİ NO
-            TextField(
-              controller: studentNoCtrl,
-              keyboardType: TextInputType.number,
-              decoration: InputDecoration(
-                labelText: "Öğrenci Numarası",
-                prefixIcon: const Icon(Icons.numbers),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
+            const SizedBox(height: 20),
+            _passwordField(
+              passwordCtrl,
+              "Şifre",
+              showPassword,
+              () => setState(() => showPassword = !showPassword),
             ),
             const SizedBox(height: 20),
-
-            // BÖLÜM
-            DropdownButtonFormField<String>(
-              value: selectedDepartment,
-              items: departmentList
-                  .map((d) => DropdownMenuItem(value: d, child: Text(d)))
-                  .toList(),
-              decoration: InputDecoration(
-                labelText: "Bölüm",
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-              onChanged: (val) => setState(() => selectedDepartment = val),
+            _passwordField(
+              confirmPasswordCtrl,
+              "Şifre Tekrar",
+              showConfirmPassword,
+              () => setState(() => showConfirmPassword = !showConfirmPassword),
             ),
-            const SizedBox(height: 20),
 
-            // SINIF
-            DropdownButtonFormField<String>(
-              value: selectedClass,
-              items: classList
-                  .map(
-                    (c) => DropdownMenuItem(value: c, child: Text("$c. Sınıf")),
-                  )
-                  .toList(),
-              decoration: InputDecoration(
-                labelText: "Sınıf",
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-              onChanged: (val) => setState(() => selectedClass = val),
-            ),
-            const SizedBox(height: 20),
-
-            // ŞİFRE
-            TextField(
-              controller: passwordCtrl,
-              obscureText: !showPassword,
-              decoration: InputDecoration(
-                labelText: "Şifre",
-                prefixIcon: const Icon(Icons.lock),
-                suffixIcon: IconButton(
-                  icon: Icon(
-                    showPassword ? Icons.visibility : Icons.visibility_off,
-                  ),
-                  onPressed: () => setState(() => showPassword = !showPassword),
-                ),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-            ),
-            const SizedBox(height: 20),
-
-            // ŞİFRE TEKRAR
-            TextField(
-              controller: confirmPasswordCtrl,
-              obscureText: !showConfirmPassword,
-              decoration: InputDecoration(
-                labelText: "Şifre Tekrar",
-                prefixIcon: const Icon(Icons.lock),
-                suffixIcon: IconButton(
-                  icon: Icon(
-                    showConfirmPassword
-                        ? Icons.visibility
-                        : Icons.visibility_off,
-                  ),
-                  onPressed: () => setState(
-                    () => showConfirmPassword = !showConfirmPassword,
-                  ),
-                ),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-            ),
             const SizedBox(height: 30),
-
-            // BUTON
             SizedBox(
               width: double.infinity,
               height: 55,
@@ -285,6 +224,70 @@ class _SignUpPageState extends State<SignUpPage> {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _input(
+    TextEditingController c,
+    String l,
+    IconData i, {
+    bool isNumber = false,
+    bool isPhone = false,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 20),
+      child: TextField(
+        controller: c,
+        keyboardType: isNumber || isPhone
+            ? TextInputType.number
+            : TextInputType.text,
+        decoration: InputDecoration(
+          labelText: l,
+          prefixIcon: Icon(i),
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+        ),
+      ),
+    );
+  }
+
+  Widget _dropdown(
+    String label,
+    List<String> list,
+    String? value,
+    Function(String?) onChanged, {
+    String suffix = "",
+  }) {
+    return DropdownButtonFormField<String>(
+      value: value,
+      items: list
+          .map((e) => DropdownMenuItem(value: e, child: Text("$e$suffix")))
+          .toList(),
+      decoration: InputDecoration(
+        labelText: label,
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+      ),
+      onChanged: onChanged,
+    );
+  }
+
+  Widget _passwordField(
+    TextEditingController c,
+    String l,
+    bool show,
+    VoidCallback toggle,
+  ) {
+    return TextField(
+      controller: c,
+      obscureText: !show,
+      decoration: InputDecoration(
+        labelText: l,
+        prefixIcon: const Icon(Icons.lock),
+        suffixIcon: IconButton(
+          icon: Icon(show ? Icons.visibility : Icons.visibility_off),
+          onPressed: toggle,
+        ),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
       ),
     );
   }

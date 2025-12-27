@@ -83,10 +83,11 @@ class _CareerPlanPageState extends State<CareerPlanPage> {
 
   void _showErrorDialog(String message) {
     // Check if error is about AI settings
-    final isSettingsError = message.contains('AI settings') || 
-                           message.contains('API key') ||
-                           message.contains('not configured');
-    
+    final isSettingsError =
+        message.contains('AI settings') ||
+        message.contains('API key') ||
+        message.contains('not configured');
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -144,9 +145,7 @@ class _CareerPlanPageState extends State<CareerPlanPage> {
             onPressed: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(
-                  builder: (context) => const AISettingsPage(),
-                ),
+                MaterialPageRoute(builder: (context) => const AISettingsPage()),
               );
             },
           ),
@@ -174,8 +173,8 @@ class _CareerPlanPageState extends State<CareerPlanPage> {
               ),
             )
           : _currentPlan == null
-              ? _buildEmptyState()
-              : _buildCareerPlanView(),
+          ? _buildEmptyState()
+          : _buildCareerPlanView(),
       floatingActionButton: _currentPlan != null
           ? FloatingActionButton.extended(
               onPressed: _generateNewPlan,
@@ -202,10 +201,7 @@ class _CareerPlanPageState extends State<CareerPlanPage> {
             const SizedBox(height: 24),
             const Text(
               'Henüz Kariyer Planınız Yok',
-              style: TextStyle(
-                fontSize: 22,
-                fontWeight: FontWeight.bold,
-              ),
+              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 16),
@@ -287,10 +283,7 @@ class _CareerPlanPageState extends State<CareerPlanPage> {
               padding: const EdgeInsets.all(16),
               child: Text(
                 _currentPlan!.careerAdvice,
-                style: const TextStyle(
-                  fontSize: 15,
-                  height: 1.5,
-                ),
+                style: const TextStyle(fontSize: 15, height: 1.5),
               ),
             ),
           ),
@@ -303,12 +296,14 @@ class _CareerPlanPageState extends State<CareerPlanPage> {
 
           // Skills to Develop Section
           _buildSectionTitle('🚀 Geliştirilmesi Gereken Beceriler'),
-          ..._currentPlan!.skillsToDevelop.map((skill) => _buildListItem(skill)),
+          ..._currentPlan!.skillsToDevelop.map(
+            (skill) => _buildListItem(skill),
+          ),
           const SizedBox(height: 24),
 
           // Goals Section
           _buildSectionTitle('📋 Hedefleriniz'),
-          
+
           // Short-term goals
           _buildGoalCard(
             '📅 Kısa Vadeli (3-6 Ay)',
@@ -358,29 +353,27 @@ class _CareerPlanPageState extends State<CareerPlanPage> {
     return Card(
       elevation: 1,
       margin: const EdgeInsets.only(bottom: 8),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(8),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       child: ListTile(
         leading: const Icon(
           Icons.check_circle,
           color: Color.fromARGB(255, 136, 31, 96),
         ),
-        title: Text(
-          text,
-          style: const TextStyle(fontSize: 15),
-        ),
+        title: Text(text, style: const TextStyle(fontSize: 15)),
       ),
     );
   }
 
-  Widget _buildGoalCard(String title, String description, Color bgColor, Color textColor) {
+  Widget _buildGoalCard(
+    String title,
+    String description,
+    Color bgColor,
+    Color textColor,
+  ) {
     return Card(
       elevation: 2,
       color: bgColor,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(

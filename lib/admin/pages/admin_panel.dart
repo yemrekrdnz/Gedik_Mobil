@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:gedik_mobil/services/auth_service.dart';
 import 'package:gedik_mobil/features/login/pages/login_page.dart';
+
 import 'announcement_management_page.dart';
 import 'cafeteria_management_page.dart';
 import 'request_suggestion_management_page.dart';
+import 'user_management_page.dart';
 
 class AdminPanel extends StatefulWidget {
   const AdminPanel({super.key});
@@ -21,6 +23,7 @@ class _AdminPanelState extends State<AdminPanel> {
     const AnnouncementManagementPage(),
     const CafeteriaManagementPage(),
     const RequestSuggestionManagementPage(),
+    const UserManagementPage(), // 👥 KULLANICILAR
   ];
 
   Future<void> logout() async {
@@ -65,6 +68,10 @@ class _AdminPanelState extends State<AdminPanel> {
           BottomNavigationBarItem(
             icon: Icon(Icons.feedback),
             label: "İstek/Öneri",
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.people),
+            label: "Kullanıcılar",
           ),
         ],
       ),
@@ -129,6 +136,17 @@ class AdminDashboard extends StatelessWidget {
               ),
             ),
           ),
+          const SizedBox(height: 16),
+
+          HoverDashboardCard(
+            title: "Kullanıcı Yönetimi",
+            icon: Icons.people,
+            color: Colors.orange,
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const UserManagementPage()),
+            ),
+          ),
         ],
       ),
     );
@@ -166,10 +184,8 @@ class _HoverDashboardCardState extends State<HoverDashboardCard> {
       child: AnimatedScale(
         scale: isHover ? 1.03 : 1.0,
         duration: const Duration(milliseconds: 200),
-        curve: Curves.easeOut,
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 200),
-          curve: Curves.easeOut,
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(16),
             boxShadow: [

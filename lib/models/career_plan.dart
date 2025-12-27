@@ -8,7 +8,8 @@ class CareerPlan {
   final List<String> skillsToDevelop;
   final Map<String, String> goals; // short, medium, long
   final DateTime createdAt;
-  final String userDataSummary; // Summary of user's courses, plans, and preferences
+  final String
+  userDataSummary; // Summary of user's courses, plans, and preferences
 
   CareerPlan({
     required this.id,
