@@ -32,25 +32,9 @@ class _AISettingsPageState extends State<AISettingsPage> {
     'japanese': '日本語',
   };
 
-  final Map<String, List<Map<String, String>>> _availableModels = {
-    'gemini': [
-      {'value': 'gemini-2.5-flash', 'label': 'Gemini 2.5 Flash (Recommended)'},
-      {'value': 'gemini-1.5-flash', 'label': 'Gemini 1.5 Flash'},
-      {'value': 'gemini-1.5-pro', 'label': 'Gemini 1.5 Pro'},
-      {'value': 'gemini-2.0-flash-exp', 'label': 'Gemini 2.0 Flash (Experimental)'},
-    ],
-    'openai': [
-      {'value': 'gpt-4o', 'label': 'GPT-4o'},
-      {'value': 'gpt-4o-mini', 'label': 'GPT-4o Mini'},
-      {'value': 'gpt-4-turbo', 'label': 'GPT-4 Turbo'},
-      {'value': 'gpt-3.5-turbo', 'label': 'GPT-3.5 Turbo'},
-    ],
-    'anthropic': [
-      {'value': 'claude-3-5-sonnet-20241022', 'label': 'Claude 3.5 Sonnet'},
-      {'value': 'claude-3-opus-20240229', 'label': 'Claude 3 Opus'},
-      {'value': 'claude-3-haiku-20240307', 'label': 'Claude 3 Haiku'},
-    ],
-  };
+  // Only Google Gemini with Gemini 2.5 Flash is supported
+  final String _modelValue = 'gemini-2.5-flash';
+  final String _modelLabel = 'Gemini 2.5 Flash';
 
   @override
   void initState() {
@@ -104,8 +88,8 @@ class _AISettingsPageState extends State<AISettingsPage> {
           .doc(user.uid)
           .set({
         'apiKey': _apiKeyController.text.trim(),
-        'provider': _selectedProvider,
-        'model': _selectedModel,
+        'provider': 'gemini',
+        'model': 'gemini-2.5-flash',
         'language': _selectedLanguage,
         'updatedAt': FieldValue.serverTimestamp(),
       });
@@ -288,7 +272,7 @@ class _AISettingsPageState extends State<AISettingsPage> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         const Text(
-                          'API Anahtarı',
+                          'Google Gemini API Anahtarı',
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
@@ -334,9 +318,9 @@ class _AISettingsPageState extends State<AISettingsPage> {
                     ),
                     const SizedBox(height: 24),
 
-                    // AI Provider Selection
+                    // AI Provider and Model Info (read-only)
                     const Text(
-                      'AI Sağlayıcı',
+                      'AI Sağlayıcı ve Model',
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
@@ -345,58 +329,42 @@ class _AISettingsPageState extends State<AISettingsPage> {
                     const SizedBox(height: 8),
                     Container(
                       decoration: BoxDecoration(
+                        color: Colors.grey.shade100,
                         border: Border.all(color: Colors.grey.shade300),
                         borderRadius: BorderRadius.circular(12),
                       ),
-                      padding: const EdgeInsets.symmetric(horizontal: 12),
-                      child: DropdownButton<String>(
-                        value: _selectedProvider,
-                        isExpanded: true,
-                        underline: const SizedBox(),
-                        items: const [
-                          DropdownMenuItem(value: 'gemini', child: Text('Google Gemini')),
-                          DropdownMenuItem(value: 'openai', child: Text('OpenAI')),
-                          DropdownMenuItem(value: 'anthropic', child: Text('Anthropic Claude')),
+                      padding: const EdgeInsets.all(16),
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.auto_awesome,
+                            color: Colors.blue.shade700,
+                            size: 24,
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text(
+                                  'Google Gemini',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  _modelLabel,
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    color: Colors.grey.shade700,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
                         ],
-                        onChanged: (value) {
-                          if (value != null) {
-                            setState(() {
-                              _selectedProvider = value;
-                              // Set default model for the provider
-                              _selectedModel = _availableModels[value]!.first['value']!;
-                            });
-                          }
-                        },
-                      ),
-                    ),
-                    const SizedBox(height: 24),
-
-                    // Model Selection
-                    const Text(
-                      'AI Modeli',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Container(
-                      decoration: BoxDecoration(
-                        border: Border.all(color: Colors.grey.shade300),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Column(
-                        children: _availableModels[_selectedProvider]!.map((model) {
-                          return RadioListTile<String>(
-                            title: Text(model['label']!),
-                            value: model['value']!,
-                            groupValue: _selectedModel,
-                            onChanged: (value) {
-                              setState(() => _selectedModel = value!);
-                            },
-                            activeColor: const Color.fromARGB(255, 136, 31, 96),
-                          );
-                        }).toList(),
                       ),
                     ),
                     const SizedBox(height: 24),
@@ -439,26 +407,19 @@ class _AISettingsPageState extends State<AISettingsPage> {
                     Container(
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: Colors.grey.shade100,
+                        color: Colors.blue.shade50,
                         borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: Colors.blue.shade200),
                       ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                      child: const Row(
                         children: [
-                          const Row(
-                            children: [
-                              Icon(Icons.lightbulb_outline, size: 18),
-                              SizedBox(width: 8),
-                              Text(
-                                'Model Hakkında:',
-                                style: TextStyle(fontWeight: FontWeight.bold),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            _getModelDescription(_selectedModel),
-                            style: const TextStyle(fontSize: 13),
+                          Icon(Icons.lightbulb_outline, size: 18, color: Colors.blue),
+                          SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              'Gemini 2.5 Flash: En yeni ve hızlı Gemini modeli. Dengeli performans ve kalite sunar.',
+                              style: TextStyle(fontSize: 13),
+                            ),
                           ),
                         ],
                       ),
@@ -492,38 +453,4 @@ class _AISettingsPageState extends State<AISettingsPage> {
     );
   }
 
-  String _getModelDescription(String model) {
-    switch (model) {
-      // Gemini models
-      case 'gemini-2.5-flash':
-        return 'En yeni ve hızlı Gemini modeli. Dengeli performans ve kalite için önerilir.';
-      case 'gemini-1.5-flash':
-        return 'Hızlı yanıt süreleri. Temel kariyer önerileri için idealdir.';
-      case 'gemini-1.5-pro':
-        return 'Gelişmiş Gemini modeli. Daha detaylı ve kapsamlı analizler sağlar.';
-      case 'gemini-2.0-flash-exp':
-        return 'Deneysel model. En yeni özellikleri test etmek için kullanılır.';
-      
-      // OpenAI models
-      case 'gpt-4o':
-        return 'En gelişmiş GPT-4 modeli. Üstün analiz ve yanıt kalitesi.';
-      case 'gpt-4o-mini':
-        return 'Hızlı ve uygun maliyetli GPT-4. İyi performans sunar.';
-      case 'gpt-4-turbo':
-        return 'Geliştirilmiş GPT-4. Hızlı ve güçlü yanıtlar.';
-      case 'gpt-3.5-turbo':
-        return 'Ekonomik seçenek. Temel görevler için yeterli.';
-      
-      // Anthropic models
-      case 'claude-3-5-sonnet-20241022':
-        return 'En yeni Claude modeli. Mükemmel analiz ve yazma yetenekleri.';
-      case 'claude-3-opus-20240229':
-        return 'En güçlü Claude modeli. Karmaşık görevler için idealdir.';
-      case 'claude-3-haiku-20240307':
-        return 'Hızlı ve verimli Claude modeli. Temel görevler için uygundur.';
-      
-      default:
-        return '';
-    }
-  }
 }

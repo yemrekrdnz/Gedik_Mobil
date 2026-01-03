@@ -38,22 +38,8 @@ class CareerPlanService {
 
   // Collect user data from Firestore
   static Future<Map<String, dynamic>> collectUserData(String userId) async {
-    List<Map<String, dynamic>> courses = [];
     List<Map<String, dynamic>> programItems = [];
     List<Map<String, dynamic>> previousPlans = [];
-
-    // Get user's course schedule (try both userId and studentNumber)
-    try {
-      final coursesSnapshot = await FirebaseFirestore.instance
-          .collection('course_schedules')
-          .where('userId', isEqualTo: userId)
-          .get();
-
-      courses = coursesSnapshot.docs.map((doc) => doc.data()).toList();
-    } catch (e) {
-      print('Error fetching courses: $e');
-      // Continue without courses if there's an error
-    }
 
     // Get user's program items (weekly plans)
     try {
@@ -86,7 +72,6 @@ class CareerPlanService {
     }
 
     return {
-      'courses': courses,
       'programItems': programItems,
       'previousPlans': previousPlans,
     };
@@ -97,18 +82,6 @@ class CareerPlanService {
     StringBuffer summary = StringBuffer();
 
     summary.writeln('=== User Academic Profile ===\n');
-
-    // Courses
-    final courses = userData['courses'] as List<Map<String, dynamic>>;
-    if (courses.isNotEmpty) {
-      summary.writeln('Current Courses:');
-      for (var course in courses) {
-        summary.writeln(
-          '- ${course['courseName']} (${course['courseCode']}) with ${course['instructor']}',
-        );
-      }
-      summary.writeln();
-    }
 
     // Program items (weekly plans and activities)
     final programItems = userData['programItems'] as List<Map<String, dynamic>>;
@@ -138,6 +111,56 @@ class CareerPlanService {
     }
 
     return summary.toString();
+  }
+
+  // Clean and validate JSON response
+  static String _cleanJsonResponse(String response) {
+    // Remove markdown code blocks if present
+    String cleaned = response.replaceAll(RegExp(r'```json\s*'), '');
+    cleaned = cleaned.replaceAll(RegExp(r'```\s*$'), '');
+    cleaned = cleaned.trim();
+    
+    // Find the JSON object
+    final jsonMatch = RegExp(r'\{[\s\S]*\}').firstMatch(cleaned);
+    if (jsonMatch != null) {
+      cleaned = jsonMatch.group(0)!;
+    }
+    
+    return cleaned;
+  }
+
+  // Validate that JSON has all required fields
+  static bool _validateCareerPlanJson(Map<String, dynamic> json) {
+    if (!json.containsKey('careerAdvice') || 
+        json['careerAdvice'] == null || 
+        json['careerAdvice'].toString().isEmpty) {
+      return false;
+    }
+    
+    if (!json.containsKey('careerPaths') || 
+        json['careerPaths'] == null || 
+        (json['careerPaths'] as List).isEmpty) {
+      return false;
+    }
+    
+    if (!json.containsKey('skillsToDevelop') || 
+        json['skillsToDevelop'] == null || 
+        (json['skillsToDevelop'] as List).isEmpty) {
+      return false;
+    }
+    
+    if (!json.containsKey('goals') || json['goals'] == null) {
+      return false;
+    }
+    
+    final goals = json['goals'] as Map<String, dynamic>;
+    if (!goals.containsKey('short') || 
+        !goals.containsKey('medium') || 
+        !goals.containsKey('long')) {
+      return false;
+    }
+    
+    return true;
   }
 
   // Generate career plan using AI
@@ -182,15 +205,18 @@ $userDataSummary
 
 Based on this information, please provide:
 1. A comprehensive career advice paragraph (at least 150 words)
-2. 3-5 possible career paths that align with their courses and activities
+2. 3-5 possible career paths that align with their activities and interests
 3. 5-7 specific skills they should develop
 4. Short-term goals (3-6 months)
 5. Medium-term goals (6-12 months)
 6. Long-term goals (1-3 years)
 
-IMPORTANT:  Your response MUST be JSON with the following structure:
+CRITICAL: Your response MUST be a COMPLETE and VALID JSON object with ALL fields. DO NOT truncate the response.
+DO NOT include markdown code blocks. Return ONLY the JSON object.
+
+Required JSON structure:
 {
-  "careerAdvice": "detailed advice here",
+  "careerAdvice": "detailed advice here (minimum 150 words)",
   "careerPaths": ["path1", "path2", "path3"],
   "skillsToDevelop": ["skill1", "skill2", "skill3", "skill4", "skill5"],
   "goals": {
@@ -200,7 +226,7 @@ IMPORTANT:  Your response MUST be JSON with the following structure:
   }
 }
 
-IMPORTANT: If there is exception, add exception message to careerAdvice and return valid JSON with empty structure.
+Ensure the JSON is complete and properly closed with all braces and brackets.
 ''';
 
       // Map provider string to ModelAPIProvider enum
@@ -230,46 +256,75 @@ IMPORTANT: If there is exception, add exception message to careerAdvice and retu
         apiKey: apiKey,
         url: url,
         systemPrompt:
-            "You are a helpful career counselor providing personalized guidance to students.",
+            "You are a helpful career counselor providing personalized guidance to students. Always respond with complete, valid JSON objects.",
         userPrompt: prompt,
         stream: false,
         modelConfigs: [
           kDefaultModelConfigTemperature.copyWith(
-            value: ConfigSliderValue(value: (0, 0.7, 1)),
+            value: ConfigSliderValue(value: (0, 0.5, 1)),
           ),
           kDefaultGeminiModelConfigMaxTokens.copyWith(
-            value: ConfigNumericValue(value: 2048),
+            value: ConfigNumericValue(value: 4096),
           ),
         ],
       );
 
       print('Using AI provider: $provider, model: $model'); // Debug log
 
-      // Execute request
-      final answer = await executeGenAIRequest(request);
+      // Retry logic - try up to 3 times to get a valid response
+      int maxRetries = 3;
+      Map<String, dynamic>? validResult;
+      
+      for (int attempt = 1; attempt <= maxRetries; attempt++) {
+        print('Attempt $attempt of $maxRetries');
+        
+        // Execute request
+        final answer = await executeGenAIRequest(request);
 
-      print('Gemini API response received'); // Debug log
+        print('AI API response received (length: ${answer?.length ?? 0})'); // Debug log
 
-      if (answer != null && answer.isNotEmpty) {
-        // Extract JSON from the response
-        final jsonMatch = RegExp(r'\{[\s\S]*\}').firstMatch(answer);
-        if (jsonMatch != null) {
-          final jsonStr = jsonMatch.group(0)!;
-          return jsonDecode(jsonStr);
+        if (answer != null && answer.isNotEmpty) {
+          try {
+            // Clean the JSON response
+            final cleanedJson = _cleanJsonResponse(answer);
+            print('Cleaned JSON: ${cleanedJson.substring(0, cleanedJson.length > 100 ? 100 : cleanedJson.length)}...');
+            
+            // Parse JSON
+            final parsed = jsonDecode(cleanedJson) as Map<String, dynamic>;
+            
+            // Validate that all required fields are present
+            if (_validateCareerPlanJson(parsed)) {
+              print('Valid complete response received');
+              validResult = parsed;
+              break; // Success - exit retry loop
+            } else {
+              print('Response missing required fields, retrying...');
+              if (attempt < maxRetries) {
+                await Future.delayed(Duration(seconds: 2)); // Wait before retry
+              }
+            }
+          } catch (e) {
+            print('Error parsing JSON (attempt $attempt): $e');
+            print('Raw response: $answer');
+            if (attempt < maxRetries) {
+              await Future.delayed(Duration(seconds: 2)); // Wait before retry
+            }
+          }
         } else {
-          // If no JSON found, return the raw text as career advice
-          print('Could not parse JSON from AI response. Using raw text.');
-          print('AI Response: $answer');
-          return {
-            'careerAdvice': answer,
-            'careerPaths': [],
-            'skillsToDevelop': [],
-            'goals': {'short': '', 'medium': '', 'long': ''},
-          };
+          print('Empty response from AI API (attempt $attempt)');
+          if (attempt < maxRetries) {
+            await Future.delayed(Duration(seconds: 2)); // Wait before retry
+          }
         }
-      } else {
-        throw Exception('No response text from AI API');
       }
+      
+      // If we got a valid result, return it
+      if (validResult != null) {
+        return validResult;
+      }
+      
+      // If all retries failed, throw an exception
+      throw Exception('Failed to get valid response after $maxRetries attempts');
     } catch (e) {
       print('Error generating career plan with AI: $e');
       // Return a fallback response if API fails
